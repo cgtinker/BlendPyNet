@@ -145,10 +145,7 @@ class WM_OT_TCPServer(bpy.types.Operator):
 
         # Try getting the next task from the queue.
         try:
-            if self.pendeling:
-                request = QUEUE.get(block=False)
-            else:
-                request = QUEUE.get(timeout=bnc.QUEUE_TIMEOUT)
+            request = QUEUE.get(block=False)
         except queue.Empty:
             request = None
             pass
