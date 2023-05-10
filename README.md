@@ -1,1 +1,3 @@
-# BlendArSock
+# BlendPyNet
+
+Currently wip.
