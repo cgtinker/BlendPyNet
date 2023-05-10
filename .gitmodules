@@ -1,0 +1,3 @@
+[submodule "b3dnet"]
+	path = b3dnet
+	url = git@github.com:cgtinker/b3dnet.git
