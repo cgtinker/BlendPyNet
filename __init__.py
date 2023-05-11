@@ -35,7 +35,7 @@ bl_info = {
     "category":    "Development"
 }
 
-QUEUE: queue.Queue[bnr.Request] = queue.Queue()
+QUEUE: queue.Queue[bnr.Task] = queue.Queue()
 logging.getLogger().setLevel(logging.DEBUG)
 
 
@@ -155,14 +155,14 @@ class WM_OT_TCPServer(bpy.types.Operator):
 
         # Check for server related requests.
         # 1. Shutdown server.
-        elif request.flag & bnr.REQUEST.SHUTDOWN:
+        elif request.flag & bnr.TASK.SHUTDOWN:
             self.cancel(context)
             return {'CANCELLED'}
 
         # 2. Restart server.
         # Change the modals callback time to save resources
         # when waiting for new connections.
-        elif request.flag & bnr.REQUEST.RESTART:
+        elif request.flag & bnr.TASK.RESTART:
             self.re_set_timer(context, 1.0)
             self.pendeling = True
 
