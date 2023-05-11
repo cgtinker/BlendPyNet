@@ -42,7 +42,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 class PG_CGT_BlendArSock_Properties(bpy.types.PropertyGroup):
     port: bpy.props.IntProperty(  # type: ignore
         default=6000, soft_min=1000, soft_max=9999,
-        description="Choose an open port number."
+        description="Choose an open port."
     )
 
     authkey: bpy.props.StringProperty(  # type: ignore
@@ -50,13 +50,18 @@ class PG_CGT_BlendArSock_Properties(bpy.types.PropertyGroup):
         description="Choose a password for incoming connections."
     )
 
+    auth2none: bpy.props.BoolProperty(  # type: ignore
+        default=False,
+        description="Set password to None to avoid handshake protocol."
+    )
+
     blocktime: bpy.props.FloatProperty(  # type: ignore
-        default=10.0, soft_min=1.0, soft_max=60.0,
+        default=14.0, soft_min=1.0, soft_max=60.0,
         description="Starting up the server blocks Blender. Set a timeout."
     )
 
     host: bpy.props.StringProperty(  # type: ignore
-        default="localhost", description="Internal Property, may be resetted."
+        default="localhost", description="Server only has been tested on localhost."
     )
 
     server_active: bpy.props.BoolProperty(  # type: ignore
@@ -86,6 +91,8 @@ class WM_OT_TCPServer(bpy.types.Operator):
             return {'FINISHED'}
 
         auth = self.user.authkey
+        if self.user.auth2none and auth == "":
+            auth = None
         assert self.user.port > 0
 
         # Initialize the server
@@ -221,26 +228,52 @@ class PT_UI_CGT_Connection_Panel(bpy.types.Panel):
         user = getattr(context.scene, "cgt_blendarsock")
         layout = self.layout
 
+        layout.use_property_decorate = False
+
         if user.server_active:
-            layout.row().operator("wm.ot_cgt_tcp_server", text="Shutdown Server", icon="CANCEL")
+            layout.row().operator("wm.ot_cgt_tcp_server", text="Shutdown", icon="CANCEL")
         elif not user.server_active:
             layout.row().operator("wm.ot_cgt_tcp_server", text="Start Server", icon="NONE")
 
         col = layout.column(align=True)
+        col.row(align=True).prop(data=user, property="port", text="Port")
+        col.row(align=True).prop(data=user, property="authkey", text="Pass")
+
+
+class PT_UI_CGT_Connection_DeveloperPanel(bpy.types.Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "BlendAR"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_label = "Developer"
+    bl_parent_id = "UI_PT_CGT_TCPConnection"
+    bl_idname = "UI_PT_CGT_TCPSubPanelConnection"
+
+    @classmethod
+    def poll(cls, context):
+        return context.preferences.view.show_developer_ui
+
+    def draw(self, context):
+        user = getattr(context.scene, "cgt_blendarsock")
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+
+        col = layout.column(align=True)
+        col.separator()
         if context.preferences.view.show_developer_ui:
             col.row(align=True).prop(data=user, property="host", text="Host")
-        col.row(align=True).prop(data=user, property="port", text="Port")
-        col.row(align=True).prop(
-            data=user, property="blocktime", text="Block")
-        col.separator()
-
-        col.row(align=True).prop(data=user, property="authkey", text="Pass")
+            col.row(align=True).prop(
+                data=user, property="blocktime", text="Block")
+            col.row(align=True).prop(
+                data=user, property="auth2none", text="Key: None")
 
 
 classes = [
     PG_CGT_BlendArSock_Properties,
     WM_OT_TCPServer,
     PT_UI_CGT_Connection_Panel,
+    PT_UI_CGT_Connection_DeveloperPanel,
 ]
 
 
